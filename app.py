@@ -8,8 +8,7 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-# Get a FREE Groq API key at https://console.groq.com
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "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")
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "YOUR_GROQ_KEY_HERE")
 
 def calc_rsi(closes, period=14):
     if len(closes) < period + 1:
@@ -62,20 +61,20 @@ def get_stock(ticker):
         prices = [{"date": dates[i], "price": round(closes[i], 2)} for i in range(len(closes))]
 
         return jsonify({
-            "symbol":       ticker.upper(),
-            "name":         info.get("longName") or info.get("shortName") or ticker.upper(),
-            "exchange":     info.get("exchange", ""),
-            "currency":     info.get("currency", "USD"),
-            "currentPrice": round(current, 2),
-            "previousClose":round(prev, 2),
-            "changePct":    change_pct,
-            "high52w":      info.get("fiftyTwoWeekHigh"),
-            "low52w":       info.get("fiftyTwoWeekLow"),
-            "rsi":          rsi,
-            "ma20":         ma20,
-            "ma50":         ma50,
-            "volatility":   volatility,
-            "prices":       prices,
+            "symbol":        ticker.upper(),
+            "name":          info.get("longName") or info.get("shortName") or ticker.upper(),
+            "exchange":      info.get("exchange", ""),
+            "currency":      info.get("currency", "USD"),
+            "currentPrice":  round(current, 2),
+            "previousClose": round(prev, 2),
+            "changePct":     change_pct,
+            "high52w":       info.get("fiftyTwoWeekHigh"),
+            "low52w":        info.get("fiftyTwoWeekLow"),
+            "rsi":           rsi,
+            "ma20":          ma20,
+            "ma50":          ma50,
+            "volatility":    volatility,
+            "prices":        prices,
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -84,7 +83,7 @@ def get_stock(ticker):
 def analyze():
     try:
         d = request.json
-        client = Groq(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)
+        client = Groq(api_key=GROQ_API_KEY)
 
         prompt = f"""You are a stock risk analyst. Analyze this data and give a concise risk management report.
 
@@ -103,7 +102,7 @@ Use these exact bold headers:
 Max 220 words. No guaranteed predictions."""
 
         response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",  # free, fast, very capable
+            model="llama-3.3-70b-versatile",
             messages=[{"role": "user", "content": prompt}],
             max_tokens=800,
         )
@@ -113,13 +112,3 @@ Max 220 words. No guaranteed predictions."""
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
-```
-
-Also add `gunicorn` to `requirements.txt` — edit that file and add:
-```
-gunicorn
-```
-
-Then on Render, make sure **Start Command** is set to:
-```
-gunicorn app:app
